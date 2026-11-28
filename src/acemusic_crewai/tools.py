@@ -5,6 +5,17 @@ from acedatacloud import AceDataCloud
 from crewai.tools import tool
 
 Model = Literal["acemusic-v1.1", "acemusic-v1"]
+AssetType = Literal["midi", "image", "video"]
+
+
+def _reference(
+    model: Model, asset_id: str | None, asset_type: AssetType | None
+) -> dict[str, str]:
+    if asset_id is None and asset_type is None:
+        return {}
+    if not asset_id or not asset_type or model != "acemusic-v1.1":
+        raise ValueError("Provide both reference fields with acemusic-v1.1.")
+    return {"asset_id": asset_id, "asset_type": asset_type}
 
 
 def _task_id(task: Any) -> dict[str, str]:
@@ -17,7 +28,10 @@ def _task_id(task: Any) -> dict[str, str]:
 
 @tool("acemusic_generate_music")
 def acemusic_generate_music(
-    prompt: str, model: Model = "acemusic-v1.1"
+    prompt: str,
+    model: Model = "acemusic-v1.1",
+    asset_id: str | None = None,
+    asset_type: AssetType | None = None,
 ) -> dict[str, Any]:
     """Submit one paid idea-to-song task. Save the returned task ID."""
     with AceDataCloud(
@@ -25,7 +39,11 @@ def acemusic_generate_music(
     ) as client:
         return _task_id(
             client.acemusic.generate(
-                action="generate", prompt=prompt, model=model, async_=True
+                action="generate",
+                prompt=prompt,
+                model=model,
+                async_=True,
+                **_reference(model, asset_id, asset_type),
             )
         )
 
@@ -132,7 +150,43 @@ def acemusic_get_task(task_id: str) -> dict[str, Any]:
         return client.acemusic.tasks(action="retrieve", id=task_id)
 
 
+@tool("acemusic_upload_asset")
+def acemusic_upload_asset(
+    type: AssetType, url: str, name: str | None = None
+) -> dict[str, Any]:
+    """Submit one paid reference asset import for an enabled type."""
+    with AceDataCloud(
+        api_token=os.environ["ACEDATACLOUD_API_TOKEN"], max_retries=0
+    ) as client:
+        return _task_id(
+            client.acemusic.upload_asset(type=type, url=url, name=name, async_=True)
+        )
+
+
+@tool("acemusic_get_asset")
+def acemusic_get_asset(id: str) -> dict[str, Any]:
+    """Read one owned MIDI, image or video asset for free."""
+    with AceDataCloud(
+        api_token=os.environ["ACEDATACLOUD_API_TOKEN"], max_retries=0
+    ) as client:
+        return client.acemusic.get_asset(id=id)
+
+
+@tool("acemusic_list_assets")
+def acemusic_list_assets(
+    type: AssetType | None = None, page: int = 1, page_size: int = 20
+) -> dict[str, Any]:
+    """Read a page of owned reference assets for free."""
+    with AceDataCloud(
+        api_token=os.environ["ACEDATACLOUD_API_TOKEN"], max_retries=0
+    ) as client:
+        return client.acemusic.list_assets(type=type, page=page, page_size=page_size)
+
+
 tools = [
+    acemusic_upload_asset,
+    acemusic_get_asset,
+    acemusic_list_assets,
     acemusic_generate_music,
     acemusic_generate_custom_music,
     acemusic_upload_audio,
