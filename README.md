@@ -13,3 +13,5 @@ The package exposes native tools for ideas, custom lyrics and titles, reference 
 ## Distribution
 
 Publishing a reviewed GitHub release with a matching `vX.Y.Z` tag builds and attaches the wheel and source archive after the offline tests pass. The package can also be built from the checkout.
+
+Reference assets use the ACE Music asset-enabled Python SDK release. Upload one enabled MIDI, image or video type, save the original task ID and use the delivered asset ID/type in idea generation with v1.1. Use the get and list asset tools for free authenticated reads. Install the SDK release containing [SDK #857](https://github.com/AceDataCloud/SDK/pull/857) before using these tools.

@@ -15,6 +15,9 @@ def test_native_tool_discovery_and_original_task(monkeypatch):
         "acemusic_upload_audio",
         "acemusic_generate_lyrics",
         "acemusic_mashup_audio",
+        "acemusic_upload_asset",
+        "acemusic_get_asset",
+        "acemusic_list_assets",
     }
     with patch("acemusic_crewai.tools.AceDataCloud") as constructor:
         api = constructor.return_value.__enter__.return_value.acemusic
